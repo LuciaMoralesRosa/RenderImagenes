@@ -9,12 +9,12 @@ using namespace std;
 
 class Imagen {
     public:
-    unsigned int width, height;
-    double maxNumber;
+    unsigned int base, altura;
+    double valorMax;
 
-    Imagen(unsigned int w, unsigned int h) : width(w), height(h), maxNumber(1), imageData(h, vector<RGB>(w)) {}
+    Imagen(unsigned int w, unsigned int h) : base(w), altura(h), valorMax(1), matrizPixeles(h, vector<RGB>(w)) {}
 
-    Imagen(unsigned int w, unsigned int h, vector<vector<RGB>> data, double max) : width(w), height(h), maxNumber(max), imageData(data) {}
+    Imagen(unsigned int w, unsigned int h, vector<vector<RGB>> pixeles, double max) : base(w), altura(h), valorMax(max), matrizPixeles(pixeles) {}
     void writeToPPM(const string& path, unsigned int res = 255) const;
     static Imagen readPPM(const string& path);
 
@@ -24,7 +24,7 @@ class Imagen {
     
     friend ostream& operator<<(ostream& os, const Imagen& image);
 
-    vector<vector<RGB>> imageData;
+    vector<vector<RGB>> matrizPixeles;
 
     double getMaxNumber();
 };

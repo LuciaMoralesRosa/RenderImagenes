@@ -4,13 +4,13 @@
 #include <fstream>
 
 double Imagen::getMaxNumber() {
-    double maxNumber = 0;
-    for ( unsigned int i = 0; i < height; i++ ) {
-        for ( unsigned int j = 0; j < width; j++ ) {
-            maxNumber = max(maxNumber, maxChannel(imageData[i][j]));
+    double valorMax = 0;
+    for ( unsigned int i = 0; i < altura; i++ ) {
+        for ( unsigned int j = 0; j < base; j++ ) {
+            valorMax = max(valorMax, maxChannel(matrizPixeles[i][j]));
         }
     }
-    return maxNumber;
+    return valorMax;
 }
 
 void readHeader(ifstream& f) {
@@ -34,52 +34,52 @@ Imagen Imagen::readPPM(const string& path){
     readHeader(f);
     string line;
     getline(f, line);
-    double maxNumber;
+    double valorMax;
     bool maxCommentFound = false;
 
     while ( line[0] == '#' ){
         
         if ( line.substr(0, 5) == "#MAX=" ) {
             maxCommentFound = true;
-            maxNumber = atof(line.substr(5, string::npos).c_str());
+            valorMax = atof(line.substr(5, string::npos).c_str());
         }
         
         getline(f, line);
 
     }
 
-    unsigned int width, height;
+    unsigned int base, altura;
 
     istringstream is(line);
-    is >> width >> height;
+    is >> base >> altura;
 
     double resolution;
 
     f >> resolution;
 
-    if ( !maxCommentFound ) maxNumber = 1;
+    if ( !maxCommentFound ) valorMax = 1;
 
-    vector<vector<RGB>> data(height, vector<RGB>(width));
+    vector<vector<RGB>> data(altura, vector<RGB>(base));
     double red,green,blue;
 
-    for ( unsigned int i = 0; i < height; i++ ) {
-        for ( unsigned int j = 0; j < width; j++ ) {
+    for ( unsigned int i = 0; i < altura; i++ ) {
+        for ( unsigned int j = 0; j < base; j++ ) {
             f >> red >> green >> blue;
 
-            red *= maxNumber / resolution;
-            green *= maxNumber / resolution;
-            blue *= maxNumber / resolution;
+            red *= valorMax / resolution;
+            green *= valorMax / resolution;
+            blue *= valorMax / resolution;
 
             RGB color(red,green,blue);
             data[i][j] = color;
         }
     }
 
-    Imagen im(width, height, data, maxNumber);
+    Imagen imagen(base, altura, data, valorMax);
 
-    cout << im << endl;
+    cout << imagen << endl;
 
-    return im;
+    return imagen;
 }
 
 
@@ -91,16 +91,16 @@ void Imagen::writeToPPM(const string& path, unsigned int res) const {
     }
 
     out << "P3" << endl;
-    out << "#MAX=" << maxNumber << endl;
+    out << "#MAX=" << valorMax << endl;
     out << "# " << path << endl;
-    out << width << " " << height << endl;
+    out << base << " " << altura << endl;
     out << res << endl;
-    for ( unsigned int i = 0; i < height; i++ ) {
-        for ( unsigned int j = 0; j < width; j++ ) {
+    for ( unsigned int i = 0; i < altura; i++ ) {
+        for ( unsigned int j = 0; j < base; j++ ) {
 
-            int r = imageData[i][j].red * (double)res / maxNumber;
-            int g = imageData[i][j].green * (double)res / maxNumber;
-            int b = imageData[i][j].blue * (double)res / maxNumber;
+            int r = matrizPixeles[i][j].red * (double)res / valorMax;
+            int g = matrizPixeles[i][j].green * (double)res / valorMax;
+            int b = matrizPixeles[i][j].blue * (double)res / valorMax;
             out << r << " " << g << " " << b << "  "; 
         }
         out << endl;
@@ -117,13 +117,13 @@ void Imagen::writeToBMP(const string& path) const {
     // write signature
     out.write("BM", 2);
 
-    // write file size (should be 54 + 3 * width * height since its color depth
+    // write file size (should be 54 + 3 * base * altura since its color depth
     // is 24 bits.
     
-    // Imagen size : 3 * (width + padding) * height
+    // Imagen size : 3 * (base + padding) * altura
     
-    unsigned int padding = (4 - (width * 3) % 4) % 4; 
-    uint32_t rasterSize = 3 * (width + padding) * height;
+    unsigned int padding = (4 - (base * 3) % 4) % 4; 
+    uint32_t rasterSize = 3 * (base + padding) * altura;
     uint32_t fileSize = 54 + rasterSize;
     out.write((char *) &fileSize, sizeof(fileSize));
 
@@ -138,8 +138,8 @@ void Imagen::writeToBMP(const string& path) const {
     uint32_t infoHeaderSize = 40;
     out.write((char *) &infoHeaderSize, sizeof(infoHeaderSize));
 
-    // Write width and height
-    uint32_t w = width, h = height;
+    // Write base and altura
+    uint32_t w = base, h = altura;
     out.write((char *) &w, sizeof(w));
     out.write((char *) &h, sizeof(h));
 
@@ -168,16 +168,16 @@ void Imagen::writeToBMP(const string& path) const {
         cout << "file size (B): " << fileSize << endl;
         cout << "data offset (B): " << dataOffset << endl;
         cout << "info header size (B): " << infoHeaderSize << endl;
-        cout << "width, height (px): (" << width << ", " << height << ")" << endl;
-        cout << "max value: " << maxNumber << endl;
+        cout << "base, altura (px): (" << base << ", " << altura << ")" << endl;
+        cout << "max value: " << valorMax << endl;
     #endif
 
     // assume bits per pixel is 24 for now
-    for ( int i = height - 1; i >= 0; i-- ) {
-        for ( int j = 0; j < width; j++ ) {
-            uint8_t b = (uint8_t)(imageData[i][j].blue * 255.0 / maxNumber);
-            uint8_t g = (uint8_t)(imageData[i][j].green * 255.0 / maxNumber);
-            uint8_t r = (uint8_t)(imageData[i][j].red * 255.0 / maxNumber);
+    for ( int i = altura - 1; i >= 0; i-- ) {
+        for ( int j = 0; j < base; j++ ) {
+            uint8_t b = (uint8_t)(matrizPixeles[i][j].blue * 255.0 / valorMax);
+            uint8_t g = (uint8_t)(matrizPixeles[i][j].green * 255.0 / valorMax);
+            uint8_t r = (uint8_t)(matrizPixeles[i][j].red * 255.0 / valorMax);
 
             dataPtr[readIndex++] = b;
             dataPtr[readIndex++] = g;
@@ -226,10 +226,10 @@ Imagen Imagen::readBMP(const string& path) {
     uint32_t infoHeaderSize;
     in.read((char *) &infoHeaderSize, sizeof(infoHeaderSize));
 
-    // read width and height
-    uint32_t width, height;
-    in.read((char *) &width, sizeof(width));
-    in.read((char *) &height, sizeof(height));
+    // read base and altura
+    uint32_t base, altura;
+    in.read((char *) &base, sizeof(base));
+    in.read((char *) &altura, sizeof(altura));
 
     // Ignore planes
     in.ignore(2);
@@ -258,30 +258,30 @@ Imagen Imagen::readBMP(const string& path) {
         cout << "file size (B): " << fileSize << endl;
         cout << "data offset (B): " << dataOffset << endl;
         cout << "info header size (B): " << infoHeaderSize << endl;
-        cout << "width, height (px): (" << width << ", " << height << ")" << endl;
+        cout << "base, altura (px): (" << base << ", " << altura << ")" << endl;
         cout << "bits per pixel: " << bitCount << endl;
     #endif
 
     // Ignore additional info header file (palettes and such) for now
     in.ignore(dataOffset - 54);
 
-    Imagen img(width, height);
-    img.maxNumber = 255;
+    Imagen img(base, altura);
+    img.valorMax = 255;
     uint8_t* dataPtr = (uint8_t*)malloc((size_t)rasterSize);
 
     in.read((char*)dataPtr, rasterSize);
 
     unsigned int readIndex = 0;
 
-    unsigned int padding = (4 - (width * 3) % 4) % 4; 
+    unsigned int padding = (4 - (base * 3) % 4) % 4; 
     // assume bits per pixel is 24 for now
-    for ( int i = height - 1; i >= 0; i-- ) {
-        for ( int j = 0; j < width; j++ ) {
+    for ( int i = altura - 1; i >= 0; i-- ) {
+        for ( int j = 0; j < base; j++ ) {
             uint8_t b = dataPtr[readIndex++];
             uint8_t g = dataPtr[readIndex++];
             uint8_t r = dataPtr[readIndex++];
 
-            img.imageData[i][j] = RGB(r,g,b);
+            img.matrizPixeles[i][j] = RGB(r,g,b);
         }
         // skip padding
         readIndex += padding;
@@ -294,6 +294,6 @@ Imagen Imagen::readBMP(const string& path) {
 }
 
 ostream& operator<<(ostream& os, const Imagen& Imagen){
-    os << "Imagen { w:" << Imagen.width << ", h:" << Imagen.height << ", max:" << Imagen.maxNumber << " }" << endl;
+    os << "Imagen { w:" << Imagen.base << ", h:" << Imagen.altura << ", max:" << Imagen.valorMax << " }" << endl;
     return os;
 }
