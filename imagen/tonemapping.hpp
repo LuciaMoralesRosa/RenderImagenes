@@ -1,34 +1,19 @@
-#pragma once 
+#pragma once
 
 #include <iostream>
-
-#include "imagen.hpp"
+#include "imagenPPM.hpp"
 
 using namespace std;
 
 namespace tonemapping {
 
-    /* Global tone mapping operators */
+    ImagenPPM clamp(const ImagenPPM& imagen, const int valor = 1);
+    ImagenPPM equalize(const ImagenPPM& imagen);
+    ImagenPPM gamma(const ImagenPPM& imagen, double gamma);
+    ImagenPPM equalizeClamp(const ImagenPPM& imagen, double v);
+    ImagenPPM gammaClamp(const ImagenPPM& imagen, double gamma);
 
-    Imagen clamp(const Imagen& Imagen);
-
-    Imagen equalize(const Imagen& Imagen);
-
-    Imagen gamma(const Imagen& Imagen, double gamma);
-
-    Imagen equalizeClamp(const Imagen& Imagen, double v);
-
-    Imagen gammaClamp(const Imagen& Imagen, double gamma);
-
-    Imagen simpleReinhard(const Imagen& Imagen, const double a, const double delta);
-
-    Imagen extendedReinhard(const Imagen& Imagen, const double a, const double delta, const double lwhite);
-
-    Imagen filmicUncharted(const Imagen& Imagen);
-
-    /* Local tone mapping operators */
-/*
-    Imagen localReinhard(const Imagen& Imagen,
-        double key, double sharp, double center, double surround, double threshold);
-*/
+    ImagenPPM simpleReinhard(const ImagenPPM& imagen, const double a, const double delta);
+    ImagenPPM extendedReinhard(const ImagenPPM& imagen, const double a, const double delta, const double lwhite);
+    ImagenPPM filmicUncharted(const ImagenPPM& imagen);
 }

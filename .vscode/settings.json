@@ -1,5 +1,16 @@
 {
     "files.associations": {
-        "xutility": "cpp"
+        "xutility": "cpp",
+        "stdexcept": "cpp",
+        "xstring": "cpp",
+        "sstream": "cpp",
+        "iosfwd": "cpp",
+        "iostream": "cpp",
+        "utility": "cpp",
+        "fstream": "cpp",
+        "vector": "cpp",
+        "cmath": "cpp",
+        "cstdlib": "cpp",
+        "tuple": "cpp"
     }
 }
