@@ -37,7 +37,7 @@ Direccion Direccion::operator-() const {
     return Direccion(-this->getX(), -this->getY(), -this->getZ());
 }
 
-const double& Direccion::operator[](const unsigned int i) const {
+const double Direccion::operator[](const unsigned int i) const {
     switch (i) {
     case 0:
         return this->getX();
@@ -118,5 +118,13 @@ double angulo(Direccion d, Direccion v) {
     double ac = acos(c);
 
     return ac;
+}
+
+Direccion normalizar(const Direccion d) {
+    return d.normalizada();
+}
+
+double obtenerModulo(const Direccion& v) {
+    return v.modulo();
 }
 

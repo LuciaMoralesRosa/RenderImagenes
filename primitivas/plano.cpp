@@ -10,22 +10,24 @@ tuple<double, double> Plano::getUVCoords(const Punto& point) const {
 Interseccion Plano::interseccion(const Rayo& r, double minT, double maxT) {
     Interseccion inter;
 
-    //Solve for t
-    double t = -((c + productoEscalar(r.origin - Punto(0,0,0), normal)) / productoEscalar(r.direction, normal));
+    Punto o = r.getOrigen();
+    Direccion d = r.getDireccion();
+    double t = -((distancia + productoEscalar(o - Punto(0,0,0), normal)) / productoEscalar(d, normal));
 
-    // Verify if the plane not intersect behind of the r.origin
-    if (t < minT + INTERSECTION_TOLERANCE || t > maxT) {
-        inter.intersects = false;
+    // Comprobar si no intersecta por detras del origen
+    if (t < minT + 0.0001 || t > maxT) {
+        inter.intersecta = false;
+        inter.punto = Punto();
+        inter.distancia = 0;
     }
     else {
-        inter.intersects = true;
-    }
+        inter.intersecta = true;
+        inter.punto = Punto(o, d, t);
+        inter.normal = normalizar(normal);
+        inter.distancia = t;
+        inter.textura = brdf;
 
-    if ( inter.intersects ) {
-        inter.brdf = brdf;
-        inter.intersections.emplace(t, normalizada(normal));
-        auto [ u, v ] = getUVCoords(r(t));
-
+        auto[u, v] = getUVCoords(r(t));
         inter.u = u; 
         inter.v = v;
     }

@@ -1,15 +1,15 @@
 #include "coordenadas.hpp"
 
-ostream& operator<< (ostream& os, Coordinate coor){
+ostream& operator<< (ostream& os, Coordenada coor){
 
     os << coor.matrix;
 
     return os;
 }
 
-Coordinate translation(const Coordinate& coord, const Vector3 v){
+Coordenada translation(const Coordenada& coord, const Vector3 v){
 
-    Coordinate transform;
+    Coordenada transform;
 
     transform.matrix[0][3] = v.x;
     transform.matrix[1][3] = v.y;
@@ -18,9 +18,9 @@ Coordinate translation(const Coordinate& coord, const Vector3 v){
     return transform(coord);
 }
 
-Coordinate rotationX(const Coordinate& coord, double theta) {
+Coordenada rotationX(const Coordenada& coord, double theta) {
 
-    Coordinate transform;
+    Coordenada transform;
 
     double coseno = cos(theta);
     double seno = sin(theta);
@@ -33,9 +33,9 @@ Coordinate rotationX(const Coordinate& coord, double theta) {
     return transform(coord);
 }
 
-Coordinate rotationY(const Coordinate& coord,  double theta){
+Coordenada rotationY(const Coordenada& coord,  double theta){
 
-    Coordinate transform;
+    Coordenada transform;
 
     double coseno = cos(theta);
     double seno = sin(theta);
@@ -48,9 +48,9 @@ Coordinate rotationY(const Coordinate& coord,  double theta){
     return transform(coord);
 }
 
-Coordinate rotationZ(const Coordinate& coord, double theta){
+Coordenada rotationZ(const Coordenada& coord, double theta){
 
-    Coordinate transform;
+    Coordenada transform;
 
     double coseno = cos(theta);
     double seno = sin(theta);
@@ -63,9 +63,9 @@ Coordinate rotationZ(const Coordinate& coord, double theta){
     return transform(coord);
 }
 
-Coordinate scale(const Coordinate& coord, const Vector3 v){
+Coordenada scale(const Coordenada& coord, const Vector3 v){
 
-    Coordinate transform;
+    Coordenada transform;
 
     transform.matrix[0][0] = v.x;
     transform.matrix[1][1] = v.y;
@@ -74,9 +74,9 @@ Coordinate scale(const Coordinate& coord, const Vector3 v){
     return transform(coord);
 }
 
-Coordinate changeBasis(const Coordinate& coord, const Vector3 u, const Vector3 v, const Vector3 w, const Vector3 o){
+Coordenada changeBasis(const Coordenada& coord, const Vector3 u, const Vector3 v, const Vector3 w, const Vector3 o){
 
-    Coordinate transform;
+    Coordenada transform;
 
     transform.matrix[0][0] = u.x;
     transform.matrix[1][0] = u.y;
@@ -97,6 +97,6 @@ Coordinate changeBasis(const Coordinate& coord, const Vector3 u, const Vector3 v
     return transform(coord);
 }
 
-Coordinate inverseTransformation(Coordinate coor) {
-    return Coordinate(coor.matrix.inverse());
+Coordenada inverseTransformation(Coordenada coor) {
+    return Coordenada(coor.matrix.inverse());
 }

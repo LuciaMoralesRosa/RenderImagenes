@@ -2,33 +2,36 @@
 
 #include <cmath>
 #include "vector.hpp"
+#include "Direccion.hpp"
+#include "Punto.hpp"
 #include "matriz4x4Nueva.hpp"
+
 /**
  * @brief Class for representing homogenous coordinates
  * 
  */
-class Coordinate {
+class Coordenada {
 
 public:
 
     Matriz4x4 matrix;
 
     /**
-     * @brief Construct a new empty Coordinate object
+     * @brief Construct a new empty Coordenada object
      * This will create an identity matrix
      */
 
-    Coordinate() : matrix() {}
+    Coordenada() : matrix() {}
 
     /**
-     * @brief Construct a new empty Coordinate object
+     * @brief Construct a new empty Coordenada object
      * @param wCord Value of w
      * This will create an identity matrix
      */
-    Coordinate(double wCoord) : matrix() { matrix[3][3] = wCoord; }
+    Coordenada(double wCoord) : matrix() { matrix[3][3] = wCoord; }
 
     /**
-     * @brief Construct a new Coordinate object
+     * @brief Construct a new Coordenada object
      * 
      * @param u The first axis vector of the coordinate system
      * @param v The first axis vector of the coordinate system
@@ -36,7 +39,7 @@ public:
      * @param o The origin of the coordinate system
      * @param wCoord The homogeneous coordinate
      */
-    Coordinate(Vector3 u, Vector3 v, Vector3 w, Vector3 o = Vector3(), double wCoord = 1) {
+    Coordenada(Vector3 u, Vector3 v, Vector3 w, Vector3 o = Vector3(), double wCoord = 1) {
 
         matrix[0][0] = u.x;
         matrix[1][0] = u.y;
@@ -58,11 +61,41 @@ public:
     }
 
     /**
-     * @brief Construct a new Coordinate object with a 4x4 matrix.
+     * @brief Construct a new Coordenada object
+     * 
+     * @param u The first axis vector of the coordinate system
+     * @param v The first axis vector of the coordinate system
+     * @param w The first axis vector of the coordinate system
+     * @param o The origin of the coordinate system
+     * @param wCoord The homogeneous coordinate
+     */
+    Coordenada(Direccion u, Direccion v, Direccion w, Punto o = Punto(), double wCoord = 1) {
+
+        matrix[0][0] = u.getX();
+        matrix[1][0] = u.getY();
+        matrix[2][0] = u.getZ();
+
+        matrix[0][1] = v.getX();
+        matrix[1][1] = v.getY();
+        matrix[2][1] = v.getZ();
+
+        matrix[0][2] = w.getX();
+        matrix[1][2] = w.getY();
+        matrix[2][2] = w.getZ();
+
+        matrix[0][3] = o.getX();
+        matrix[1][3] = o.getY();
+        matrix[2][3] = o.getZ();
+
+        matrix[3][3] = wCoord;
+    }
+
+    /**
+     * @brief Construct a new Coordenada object with a 4x4 matrix.
      * 
      * @param mat The matrix object
      */
-    inline Coordinate(const Matriz4x4 mat) : matrix(mat) {}
+    inline Coordenada(const Matriz4x4 mat) : matrix(mat) {}
 
     /**
      * @brief Get the origin of the coordinate system
@@ -75,11 +108,11 @@ public:
      * @brief Apply the transformation to coord
      * 
      * @param coord The coordinates to transform 
-     * @return Coordinate 
+     * @return Coordenada 
      */
-    Coordinate operator()(const Coordinate& coord) { return Coordinate(matrix * coord.matrix); }
+    Coordenada operator()(const Coordenada& coord) { return Coordenada(matrix * coord.matrix); }
 
-    friend ostream& operator<<(ostream& os, Coordinate coor);
+    friend ostream& operator<<(ostream& os, Coordenada coor);
 };
 
 /**
@@ -89,52 +122,52 @@ public:
  * @param coor The coordinate system
  * @return ostream& 
  */
-ostream& operator<<(ostream& os, Coordinate coor);
+ostream& operator<<(ostream& os, Coordenada coor);
 
 /**
  * @brief Translates coord by a translation vector v.
  * 
  * @param coord The coordinate object
  * @param v The translation vector
- * @return Coordinate 
+ * @return Coordenada 
  */
-Coordinate translation(const Coordinate& coord, const Vector3 v);
+Coordenada translation(const Coordenada& coord, const Vector3 v);
 
 /**
  * @brief Rotate the coordinate system by theta radians on the X axis.
  * 
  * @param coord The coordinate object
  * @param theta The rotation angle, in radians 
- * @return Coordinate 
+ * @return Coordenada 
  */
-Coordinate rotationX(const Coordinate& coord, double theta);
+Coordenada rotationX(const Coordenada& coord, double theta);
 
 /**
  * @brief Rotate the coordinate system by theta radians on the Y axis.
  * 
  * @param coord The coordinate object
  * @param theta The rotation angle, in radians 
- * @return Coordinate 
+ * @return Coordenada 
  */
-Coordinate rotationY(const Coordinate& coord, double theta);
+Coordenada rotationY(const Coordenada& coord, double theta);
 
 /**
  * @brief Rotate the coordinate system by theta radians on the Z axis.
  * 
  * @param coord The coordinate object
  * @param theta The rotation angle, in radians 
- * @return Coordinate 
+ * @return Coordenada 
  */
-Coordinate rotationZ(const Coordinate& coord, double theta);
+Coordenada rotationZ(const Coordenada& coord, double theta);
 
 /**
  * @brief Scale the coordinate system by a scale vector
  * This will scale by v.x on the X axis, v.y on the Y axis, and v.z on the Z axis
  * @param coord The coordinate object
  * @param v The scale vector
- * @return Coordinate 
+ * @return Coordenada 
  */
-Coordinate scale(const Coordinate& coord, const Vector3 v);
+Coordenada scale(const Coordenada& coord, const Vector3 v);
 
 /**
  * @brief Change the coordinate basis.
@@ -144,15 +177,15 @@ Coordinate scale(const Coordinate& coord, const Vector3 v);
  * @param v The new basis's second axis in the old basis's coordinates
  * @param w The new basis's third axis in the old basis's coordinates
  * @param o The new basis's origin in the old basis's coordinates
- * @return Coordinate 
+ * @return Coordenada 
  */
-Coordinate changeBasis(const Coordinate& coord, const Vector3 u, const Vector3 v, const Vector3 w, const Vector3 o);
+Coordenada changeBasis(const Coordenada& coord, const Vector3 u, const Vector3 v, const Vector3 w, const Vector3 o);
 
 /**
  * @brief Return the inverse transform of the coordinate object.
  * Applying the inverse transformation to the coordinate object should return
  * an identity coordinate object.
  * @param coor The coordinate object
- * @return Coordinate 
+ * @return Coordenada 
  */
-Coordinate inverseTransformation(Coordinate coor);
+Coordenada inverseTransformation(Coordenada coor);

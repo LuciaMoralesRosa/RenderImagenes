@@ -7,6 +7,7 @@
 #include "../geometria/Direccion.hpp"
 #include "../geometria/Punto.hpp"
 #include "interseccion.hpp"
+#include "rayo.hpp"
 
 using namespace std;
 
@@ -16,19 +17,19 @@ using namespace std;
  */
 class Plano : public Primitiva {
     private:
-    double c;
+    double distancia; // valor c
+    Direccion normal, uAxis, vAxis;
 
     tuple<double, double> getUVCoords(const Punto& point) const;
 
 public:
-    Direccion normal, uAxis, vAxis;
     
-    Plano(Punto _pointA, Punto _pointB, Punto _pointC, const shared_ptr<BRDF>& brdf)
+    Plano(Punto a, Punto b, Punto c, const shared_ptr<BRDF>& brdf)
         : Primitiva(brdf),
-          normal(productoVectorial(_pointB - _pointA, _pointC - _pointA)),
-          uAxis(_pointB - _pointA),
-          vAxis(_pointC - _pointA),
-          c(-productoEscalar(_pointA - Punto(0,0,0), normal)) 
+          normal(productoVectorial(b - a, c - a)),
+          uAxis(b - a),
+          vAxis(c - a),
+          distancia(-productoEscalar(a - Punto(0,0,0), normal)) 
     {}
 
     /**
@@ -36,14 +37,18 @@ public:
      * @param _c The value of c
      * @param _normal The value of the normal of the plane
      */
-    Plano(double _c, Direccion _normal, const shared_ptr<BRDF>& brdf) 
+    Plano(double d, Direccion n, const shared_ptr<BRDF>& brdf) 
         : Primitiva(brdf),
-          normal(_normal),
+          normal(n),
           uAxis(perpendicular(normal)), 
           vAxis(productoVectorial(normal, uAxis)),
-          c(_c)
+          distancia(d)
     {}
 
-    Interseccion interseccion(const Rayo& r, double minT, double maxT) override;
+    Interseccion interseccion(const Rayo& r, double minT = 0.001, double maxT = INFINITY) override;
+
+    // Getters
+    double getDistancia() const { return distancia; }
+    Direccion getNormal() const { return normal; }
 
 };

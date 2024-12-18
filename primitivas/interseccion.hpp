@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream>
+#include <memory>  // Para usar std::shared_ptr
 
 #include "../geometria/Direccion.hpp"
 #include "../geometria/Punto.hpp"
@@ -20,7 +21,9 @@ struct Interseccion {
     Punto punto;
     Direccion normal;
     double distancia;
-    BRDF textura;
+    shared_ptr<BRDF> textura;
+
+    double u, v;
    
     friend ostream& operator<<(ostream& os, const Interseccion& it);
 };

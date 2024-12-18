@@ -1,6 +1,5 @@
 #include "matriz4x4Nueva.hpp"
 
-#include <iomanip>
 
 Matriz4x4::Matriz4x4(double m[4][4]) { 
     for(int i = 0; i < 4; i++) {

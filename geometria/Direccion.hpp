@@ -1,10 +1,3 @@
-
-/*
-mult por escalar
-resta de puntos (dir)
-distancia entre dos puntos
-trasladar
-*/
 #pragma once
 
 #define M_PI           3.14159265358979323846  /* pi */
@@ -20,6 +13,8 @@ class Direccion {
     
     public:
     Direccion(double x = 0, double y = 0, double z = 0) : vector(x, y, z) {}
+    Direccion(Vector3 v) : vector(v.x, v.y, v.z) {}
+
 
 
     double modulo() const;
@@ -37,7 +32,7 @@ class Direccion {
     Direccion operator/(const double scalar) const;
     Direccion operator+(const double scalar) const;
     Direccion operator-() const;
-    const double& operator[](const unsigned int i) const;
+    const double operator[](const unsigned int i) const;
 
 
     // Comparadores
@@ -53,6 +48,7 @@ class Direccion {
     double getX() const {return vector.x; }
     double getY() const {return vector.y; }
     double getZ() const {return vector.z; }
+    Vector3 getVector() const { return vector; }
 
     void setX(const double valor) {vector.x = valor; }
     void setY(const double valor) {vector.y = valor; }
@@ -64,8 +60,8 @@ class Direccion {
 
 double productoEscalar(const Direccion u, const Direccion v);
 Direccion productoVectorial(const Direccion u, const Direccion v);
-Direccion normalizada(const Direccion d) { return d.normalizada(); }
+Direccion normalizar(const Direccion d);
 Direccion perpendicular(const Direccion d);
 bool mismaDireccionSentido(Direccion d, Direccion v);
 double angulo(Direccion d, Direccion v);
-double modulo(const Direccion& v) { return v.modulo(); }
+double obtenerModulo(const Direccion& v);

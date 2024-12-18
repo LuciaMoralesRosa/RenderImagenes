@@ -15,9 +15,11 @@ class Punto {
     
     public:
     Punto(double x = 0, double y = 0, double z = 0) : vector(x, y, z) {}
+    Punto(Vector3 v) : vector(v.x, v.y, v.z) {}
     Punto(Punto origen, Direccion direccion, double distancia);
 
-    Direccion operator-(Punto& otro) const;
+    Direccion operator-(const Punto& otro) const;
+    Punto operator+(const Direccion& otro) const;
     Punto operator*(const double scalar) const;
     Punto operator/(const double scalar) const;
 
@@ -30,6 +32,7 @@ class Punto {
     double getX() const {return vector.x; }
     double getY() const {return vector.y; }
     double getZ() const {return vector.z; }
+    Vector3 getVector() const { return vector; }
 
     void setX(const double valor) {vector.x = valor; }
     void setY(const double valor) {vector.y = valor; }

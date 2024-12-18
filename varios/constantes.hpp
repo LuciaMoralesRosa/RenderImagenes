@@ -1,3 +1,5 @@
+#pragma once
+
 #include "../color/RGB.hpp"
 #include "../geometria/Punto.hpp"
 
