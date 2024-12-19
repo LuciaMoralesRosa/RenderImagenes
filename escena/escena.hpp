@@ -32,10 +32,10 @@ class Escena {
         ValoresEscena valores;
         shared_ptr<Textura<RGB>> textura;
         Camara camara;
-        vector<shared_ptr<Primitiva>> primitivas;
-        vector<shared_ptr<Luz>> luces;
 
     public:
+        vector<shared_ptr<Primitiva>> primitivas;
+        vector<shared_ptr<Luz>> luces;
         using RenderMethod = function<ImagenPPM(const Escena&)>;
 
         Escena(ValoresEscena v, Camara c, const shared_ptr<Textura<RGB>> tex = nullptr) : camara(c), valores(v), textura(tex) {};
@@ -46,4 +46,9 @@ class Escena {
         ImagenPPM dibujarEscena(const RenderMethod& method) { return method(*this); }
         RGB sampledColor(const Direccion& dir) const;
         RGB colorDelRayo(const Rayo& r, Primitiva& p) const;
+
+        //Getters
+        ValoresEscena getValores() const { return valores; }
+        Camara getCamara() const { return camara; }
+
 };

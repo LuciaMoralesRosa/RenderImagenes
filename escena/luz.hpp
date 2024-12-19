@@ -12,7 +12,7 @@ class Luz {
     public:
         Luz(RGB p) : potencia(p) {}
         virtual Rayo sample() const = 0;
-
+        RGB getPotencia() { return potencia; }
 };
 
 class LuzPuntual : public Luz {
@@ -21,6 +21,7 @@ class LuzPuntual : public Luz {
     public:
     LuzPuntual(Punto p, RGB potencia) : centro(p), Luz(potencia) {}
     Rayo sample() const override;
+    Punto getCentro() { return centro; }
 };
 
 

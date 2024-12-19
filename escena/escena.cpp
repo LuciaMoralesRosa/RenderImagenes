@@ -21,35 +21,6 @@ RGB Escena::sampledColor(const Direccion& dir) const {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 RGB Escena::colorDelRayo(const Rayo& r, Primitiva& p) const {
     Interseccion inter;
     inter = p.interseccion(r);

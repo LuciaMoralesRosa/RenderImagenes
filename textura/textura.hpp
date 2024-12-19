@@ -1,4 +1,7 @@
+#pragma once
 
+#include "../color/RGB.hpp"
+#include "../geometria/Punto.hpp"
 
 template <typename E>
 class Textura {

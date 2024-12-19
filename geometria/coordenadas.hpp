@@ -69,6 +69,36 @@ public:
      * @param o The origin of the coordinate system
      * @param wCoord The homogeneous coordinate
      */
+    Coordenada(Direccion u, Direccion v, Direccion w, Direccion o = Direccion(), double wCoord = 1) {
+
+        matrix[0][0] = u.getX();
+        matrix[1][0] = u.getY();
+        matrix[2][0] = u.getZ();
+
+        matrix[0][1] = v.getX();
+        matrix[1][1] = v.getY();
+        matrix[2][1] = v.getZ();
+
+        matrix[0][2] = w.getX();
+        matrix[1][2] = w.getY();
+        matrix[2][2] = w.getZ();
+
+        matrix[0][3] = o.getX();
+        matrix[1][3] = o.getY();
+        matrix[2][3] = o.getZ();
+
+        matrix[3][3] = wCoord;
+    }
+
+    /**
+     * @brief Construct a new Coordenada object
+     * 
+     * @param u The first axis vector of the coordinate system
+     * @param v The first axis vector of the coordinate system
+     * @param w The first axis vector of the coordinate system
+     * @param o The origin of the coordinate system
+     * @param wCoord The homogeneous coordinate
+     */
     Coordenada(Direccion u, Direccion v, Direccion w, Punto o = Punto(), double wCoord = 1) {
 
         matrix[0][0] = u.getX();
