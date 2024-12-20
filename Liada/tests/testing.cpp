@@ -1,6 +1,9 @@
 #include <iostream>
 #include <string>
-
+#include <thread>
+#include <tuple>
+#include <chrono>
+#include <functional>
 
 #include "../color/RGB.hpp"
 #include "../geometria/Direccion.hpp"
@@ -11,13 +14,19 @@
 #include "../primitivas/rayo.hpp"
 #include "../primitivas/esfera.hpp"
 #include "../primitivas/plano.hpp"
+#include "../escena/escena.hpp"
+#include "../escena/escenas.hpp"
+#include "../pathTracing/pathtracer.hpp"
+
+using namespace std;
+
 
 /* Compilacion:
-g++ testing.cpp ../color/RGB.cpp ../imagen/imagenPPM.cpp ../imagen/tonemapping.cpp ../geometria/vector.cpp ../geometria/Direccion.cpp ../geometria/Punto.cpp ../geometria/matriz4x4Nueva.cpp ../geometria/coordenadas.cpp ../primitivas/rayo.cpp ../primitivas/esfera.cpp ../primitivas/plano.cpp -o testing
+g++ testing.cpp ../varios/misc.cpp ../color/RGB.cpp ../imagen/imagenPPM.cpp ../imagen/tonemapping.cpp ../geometria/vector.cpp ../geometria/Direccion.cpp ../geometria/Punto.cpp ../geometria/matriz4x4Nueva.cpp ../geometria/coordenadas.cpp ../primitivas/rayo.cpp ../primitivas/esfera.cpp ../primitivas/rectangulo.cpp ../primitivas/cubo.cpp ../primitivas/plano.cpp ../escena/luz.cpp ../escena/camara.cpp ../escena/escena.cpp ../materiales/BRDFSimple.cpp ../materiales/emisor.cpp ../pathTracing/pathtracer.cpp -o testing
 
 */
 
-
+/*
 //---------------------------- TONE MAPPING COLOR ----------------------------//
 void test_ImagenTonemappingColor() {
     cout << "Inicio del test: test_ImagenTonemappingColor ---------------------" << endl;
@@ -323,8 +332,46 @@ void test_crearEsfera_degradado() {
     imagen.escrituraPPM("imagenEsferaDegradada.ppm");
 }
 //------------------------------ CREAR ESFERA 2 ------------------------------//
+*/
+//---------------------------- PATH TRACING ESFERA ---------------------------//
+void test_pathTracer() {
+    ValoresEscena valores;
+    valores.width = 256;
+    valores.height = 256;
+    valores.factorAntialising = 64;
+    valores.hilos = thread::hardware_concurrency();
+    valores.rebotes = 10;
+
+    string fichero = "testPathtracer.ppm";
+
+    Escena escena = cornellBox_Difusa(valores);
+
+    ImagenPPM imagen(valores.width, valores.height);
+
+    auto s = measureTime<std::chrono::milliseconds>(
+        [&]()
+        {
+            imagen = escena.dibujarEscena(
+                [&](const Escena &sc) -> ImagenPPM
+                {
+                    return pathTracing(escena);
+                });
+        }
+    );
+
+    cout << "Listo (" << (double)s / 1000.0 << " s)." << endl;
+
+    imagen.setValorMax(imagen.getNumeroMayor());
+
+    ImagenPPM gamma = tonemapping::gamma(imagen, 2.2);
+    cout << "Guardando imagen en " << fichero << endl;
+
+    gamma.setValorMax(gamma.getNumeroMayor());
+    gamma.escrituraPPM(fichero);
+}
 
 
+//---------------------------- PATH TRACING ESFERA ---------------------------//
 
 
 //----------------------------------------------------------------------------//
@@ -338,12 +385,14 @@ int main(){
     cout << "\t 3 - test_crearEsfera" << endl;
     cout << "\t 4 - test_crearEsfera_2 (Con interseccion)" << endl;
     cout << "\t 5 - test_crearEsfera_degradada" << endl;
+    cout << "\t 6 - test_pathTracer" << endl;
 
 
     int eleccion;
     cin >> eleccion;
 
     switch (eleccion){
+    /*
     case 1:
         test_ImagenTonemappingColor();
         break;
@@ -358,6 +407,10 @@ int main(){
         break;
     case 5:
         test_crearEsfera_degradado();
+        break;
+    */
+    case 6:
+        test_pathTracer();
         break;
     default:
         break;

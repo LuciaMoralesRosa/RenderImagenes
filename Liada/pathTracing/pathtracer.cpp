@@ -73,7 +73,7 @@ RGB pathTraceRay(const Escena& escena, const Rayo& r, unsigned int rebotesRestan
     if(interseccion.intersecta) {
         if (interseccion.textura->esEmisor()) {
             // The object is an emitter, just add the emission value
-            return interseccion.textura->eval(Vector3(), Vector3(), Vector3(), Interseccion{});
+            return interseccion.textura->eval(Punto(), Direccion(), Direccion(), Interseccion{});
         } else {
 
             auto result = interseccion.textura->sample(normalizar(r.getDireccion()), r(interseccion.distancia), interseccion);
@@ -141,7 +141,7 @@ ImagenPPM pathTracing(const Escena& escena) {
             Pixel res = tp.getResultado();
             imagen.setPixelMatriz(res.y, res.x, res.contribucion);
 
-            double maximo = max({imagen.getValorMax(), res.contribucion.getR(), res.contribucion.getG(), res.contribucion.getB()});
+            double maximo = max(imagen.getValorMax(), max(res.contribucion.getR(), max(res.contribucion.getG(), res.contribucion.getB())));
             imagen.setValorMax(maximo);
         }
     }

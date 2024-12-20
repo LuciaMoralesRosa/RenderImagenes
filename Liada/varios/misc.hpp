@@ -1,6 +1,8 @@
 #pragma once
 
 #include <random>
+#include <chrono>
+#include <functional>
 
 /**
  * @brief Clamp val by a higher bound
@@ -46,3 +48,14 @@ class RandomGenerator {
         std::uniform_real_distribution<double> distribution;
         std::default_random_engine generator;
 };
+
+template <typename Unit>
+uint64_t measureTime(std::function<void()> f) {
+    auto begin = std::chrono::high_resolution_clock::now();
+
+    // measure execution time
+    f();
+
+    auto end = std::chrono::high_resolution_clock::now();
+    return std::chrono::duration_cast<Unit>(end-begin).count();
+}

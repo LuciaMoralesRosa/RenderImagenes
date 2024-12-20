@@ -11,7 +11,7 @@
 #include "../primitivas/interseccion.hpp"
 
 // Forward declaration of Intersection because of circular includes.
-struct Intersection;
+struct Interseccion;
 
 struct BRDFInteraccion {
     Direccion outDirection;
