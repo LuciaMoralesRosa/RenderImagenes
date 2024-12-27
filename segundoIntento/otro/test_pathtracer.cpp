@@ -42,8 +42,8 @@ int main(int argc, char* argv[]) {
 	unsigned t0 = clock();
 	//bool popDone = populateList (camera, listFigures, lightSources, raysPerPixel, threads, photons, radius, neighbors, argv[1], false);
     
-    //inicializarManualmente(camera, listFigures, lightSources, raysPerPixel, threads, photons, radius, neighbors);
-    bool nuevaPoblacion = newPopulate(camera, listFigures, lightSources, raysPerPixel, threads, photons, radius, neighbors, argv[1], false);
+    inicializarManualmente(camera, listFigures, lightSources, raysPerPixel, threads, photons, radius, neighbors);
+    //bool nuevaPoblacion = newPopulate(camera, listFigures, lightSources, raysPerPixel, threads, photons, radius, neighbors, argv[1], false);
     
     unsigned t1 = clock();
 

@@ -11,6 +11,8 @@
 #include <cmath>
 #include <cstdint>
 
+#include "../materiales/material.hpp"
+
 enum Phenomenom {DIFFUSE, REFLECTION, REFRACTION, LIGHT, NONE};
 
 // Random generators.
@@ -28,10 +30,9 @@ public:
 	// Color (diffuse, specular, transmission and light) coeficients and
 	// refraction index.
 	Color kd, ks, kt, kl;
-	float nRefraction;
+    float nRefraction;
+    Light majorCh;
 
-	// Channel with the maximum contribution.
-	Light majorCh;
 
 public:
 
