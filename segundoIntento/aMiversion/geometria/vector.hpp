@@ -58,7 +58,6 @@ public:
      */
 	Vector(float x, float y, float z, uint8_t esPunto);
 
-
     /**
      * @brief Devuelve el módulo (longitud) del vector.
      * @return El módulo del vector.

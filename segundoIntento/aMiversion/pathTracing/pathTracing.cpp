@@ -1,241 +1,213 @@
 #include "pathTracing.hpp"
 
 
-RGB colorInterseccion (const Primitiva* primitiva, list<Primitiva*> primitivas, const Punto& pInter,
-    Luz& luz, const Camara& camara, RGB& colorDisipado, Efecto efecto,
-    Direccion direccionCamara){
-    
-	// Check if the plane is against the light.
-	if (primitiva->planoContraLuz(camara, luz, pInter)) {
+RGB colorInterseccion(const Primitiva* primitiva, list<Primitiva*> primitivas,
+	const Punto& pInterseccion, Luz& luz, const Camara& camara,
+	RGB& colorDisipado, Efecto efecto, Direccion direccionRayo){
+
+	// Comprobar si el plano esta contra la luz
+	if(primitiva->planoContraLuz(camara, luz, pInterseccion)) {
+		// Si está contra la luz -> negro.
 		return RGB(0);
 	}
 
-	// Check if the point is in shadow.
-	Vector direccionRayo = distancia(luz.centro, pInter);
-	float moduloRayo = direccionRayo.modulo();
-	float d; // Distancia al punto de interseccion
+	Vector distanciaLuz = distancia(luz.centro, pInterseccion);
+	float modDistancia = distanciaLuz.modulo();
+	float t;
 
-	for (Primitiva* p : primitivas) {
-		bool intersecta = p->intersecta(Rayo(pInter, direccionRayo), d);
-		bool hayDistancia = (1 - d) * moduloRayo > 1e-6;
-		bool noEsElMismo = p != primitiva ||
-			distancia(pInter, luz.centro - d * (direccionRayo)).modulo() > 1e-4;
-
-		if (intersecta && hayDistancia && noEsElMismo) {
+	// Comprobar si alguna primitiva le da sombra
+	for (Primitiva* p : primitivas){
+		if(p->intersecta(Rayo(luz.centro, -distanciaLuz), t)
+		&& (1 - t) * modDistancia > 1e-6
+		&& (p != primitiva || distancia(pInterseccion, luz.centro - t * (distanciaLuz)).modulo() > 1e-4)) {
 			return RGB(0);
 		}
 	}
 
-	// Calculate the color of the hit.
-	RGB Li = luz.potencia / (moduloRayo * moduloRayo);
-	float cosine = abs(escalar(primitiva->obtenerNormal(pInter), direccionRayo.normalizar()));
-    BRDF brdf(primitiva->obtenerMaterial(), primitiva->obtenerNormal(pInter));
-	return Li * brdf.getFr(efecto, direccionCamara, pInter) * cosine * colorDisipado;
+	// Esta a la luz -> calcular color
+	RGB Li = luz.potencia / (pow(modDistancia, 2));
+	float cosine = abs(escalar(primitiva->obtenerNormal(pInterseccion), distanciaLuz.normalizar()));
+
+	BRDF brdf(primitiva->obtenerMaterial(), primitiva->obtenerNormal(pInterseccion));
+	return Li * brdf.getFr(efecto, direccionRayo, pInterseccion) * cosine * colorDisipado;
+
 }
 
 
-void captureSection(Camara& camara, list<Primitiva*> primitivas, vector<Luz> luces,
-    int rpp, int minX, int maxX, int minY, int maxY, vector<RGB>& valoresPixeles){
-    Vector modL = camara.l.normalizar(); // Vector L de camara normalizado
-	Vector modU = camara.u.normalizar(); // Vector U de camara normalizado
-	Vector esquinaSupIzq = camara.f + camara.l + camara.u;	
-	GeneradorAleatorios rand(0, 1);	// Generador de numeros aleatorios entre 0 y 1
-	RGB colorPixel, colorRayo; // Color del pixel y del rayo
-	Rayo rayoCamara; // Rayo de la camara al punto a evaluar
-	Direccion direccionCamara; // Direccion del rayo de la camara al punto a evaluar
-	float t, minT; // Distancia menor a la que intersecta el rayo
-	Punto pInter; // Punto de interseccion del rayo
-	Primitiva* primitiva; // Primitiva con la que intersecta el rayo
-	RGB colorDisipado; // Color disipado por la primitiva
-	Efecto efecto;	// Efecto de la interseccion
+
+void capturarSeccion(Camara& camara, list<Primitiva*> primitivas,
+	vector<Luz> luces, int rpp, int minX, int maxX,	int minY, int maxY,
+	vector<RGB>& valoresPixeles){
+
+	Vector modL = camara.l.normalizar();					// L and U normalized vectors.
+	Vector modU = camara.u.normalizar();
+	Vector sightOrigin = camara.f + camara.l + camara.u;	// Point located at the top left corner of the image.
+	GeneradorAleatorios rand(0, 1);							// Random number generator.
+	RGB pxColor, rayColor;							// Total color for one pixel / ray.
+	Rayo ray;											// Current ray.
+	Direccion rayDirection;								// Direction of ray.
+	float t, minT;										// Distance to the closest figure.
+	Punto hit;											// Point on whith the ray hits.
+	Primitiva* primitiva;								// Closest figure to the camara.
+	RGB scatter;										// Color of the light scattered by the figure.
+	Efecto ph;										// Phenomenom of a interaction.
 	
-	// Para cada pixel en la seccion [minX, maxX]x[minY, maxY]
-	for (int i = minY; i < maxY; i++){
-		for (int j = minX; j < maxX; j++) {
+	// For each pixel in the section.
+	for (int i = minX; i < maxX; i++)
+		for (int j = minY; j < maxY; j++) {
 
-			colorPixel = RGB();
+			pxColor = RGB();
 
-			// Para cada rayo lanzado por pixel
+			// For each ray.
 			for (int k = 0; k < rpp; k++) {
 
-				// El rayo empieza sin color
-				colorRayo = RGB();
-				colorDisipado = RGB(1);
+				// Ray color starts being 0.
+				rayColor = RGB();
 
-				// Obtenemos la direccion del rayo desde la camara al punto a evaluar
-				// Esquina superior como referencia + j bases de pixel + i alturas de pixel
-				direccionCamara = Direccion(esquinaSupIzq -
-					(j + rand.get()) * camara.basePixel * modL -
-					(i + rand.get()) * camara.alturaPixel * modU);
+				// At first, scatter doesn't affect the total color.
+				scatter = RGB(1);
 
-				// Creamos el rayo de la camara al punto a evaluar
-				rayoCamara = Rayo(camara.o, direccionCamara);
+				// Get the direction of the ray.
+				rayDirection = Direccion(sightOrigin - (j+rand.get())*camara.basePixel*modL
+						- (i+rand.get())*camara.alturaPixel*modU);
+				// Build the ray using the camara's origin and the direction.
+				ray = Rayo(camara.o, rayDirection);
 
-				// Mientras el rayo intersecte con una primitiva y no sea 
-				// absorbido
+				// While the ray hits a figure and it's not absorbed.
 				while (true) {
-					minT = 1e6; // Distancia minima a la que intersecta
-					primitiva = nullptr; // Primitiva con la que intersecta
 
-					// Obtener la primera primitiva con la que intersecta
-					for (Primitiva* p : primitivas) {
-						if (p->intersecta(rayoCamara, t) && t < minT) {
+					// Get the first figure that intersects the ray, and the
+					// point of the intersection.
+					minT = 1e6;
+					primitiva = nullptr;
+					for (Primitiva* p : primitivas)
+						if (p->intersecta(ray, t) && t < minT) {
 							minT = t;
 							primitiva = p;
-						}
+					}
+					if (primitiva == nullptr) break;
+					hit = ray.obtenerOrigen() + minT*ray.obtenerDireccion();
+
+					// Get the phenomenom of the interaction.
+					BRDF brdf = BRDF(primitiva->obtenerMaterial(), primitiva->obtenerNormal(hit));
+					ph = brdf.obtenerEfecto();
+
+					// ABSORPTION: finish.
+					if (ph == ABSORCION)
+							break;
+
+					// LIGHT: add the light color and finish.
+					else if (ph == LUZ) {
+						rayColor += brdf.kl * scatter;
+						break;
+					} 
+
+					// REFLECTION: update scatter and get new ray.
+					else if (ph == REFLEXION)
+							scatter *= brdf.getFr(ph, rayDirection, hit);
+
+					// REFRACTION: update scatter and get new ray.
+					else if (ph == REFRACCION)
+							scatter *= brdf.getFr(ph, rayDirection, hit);
+
+					// DIFFUSE: add contribution, update scatter and get new ray.
+					else {
+						for (int i = 0; i < luces.size(); ++i)
+								rayColor += colorInterseccion(primitiva, primitivas,
+												hit, luces[i], camara,
+												scatter, ph, rayDirection);
+						scatter *= M_PI * brdf.getFr(ph, rayDirection, hit);
 					}
 
-					// No ha intersectado con primitiva -> termina el bucle
-					if (primitiva == nullptr) { break; }
-
-					// Si ha intersectado, obtenemos el punto de interseccion
-					pInter = rayoCamara.obtenerOrigen() + minT * rayoCamara.obtenerDireccion();
-
-					// Obtenemos el efecto dependiendo del material de la primitiva
-                    BRDF brdf = BRDF(primitiva->obtenerMaterial(), primitiva->obtenerNormal(pInter));
-					efecto = brdf.obtenerEfecto();
-
-					bool terminar = false;
-					switch(efecto) {
-						case ABSORCION:
-							terminar = true;
-							break;
-						case LUZ:
-							colorRayo += brdf.kl * colorDisipado;
-							terminar = true;
-							break;
-						case REFLEXION || REFRACCION:
-							colorDisipado *= brdf.getFr(efecto, direccionCamara, pInter);
-							break;
-						default:
-							for (int i = 0; i < luces.size(); ++i) {
-								colorRayo += colorInterseccion(primitiva, primitivas,
-									pInter, luces[i], camara, colorDisipado,
-									efecto, direccionCamara);
-							}
-							colorDisipado *= M_PI * brdf.getFr(efecto, direccionCamara, pInter);
-					}
-
-					if (terminar) { break; }
-
-					// Actualizamos el rayo para que siga desde el punto de interseccion
-					pInter = pInter + 1e-4 * direccionCamara;
-					rayoCamara = Rayo(pInter, direccionCamara);
+					// Update the ray.
+					hit = hit + 1e-4 * rayDirection;
+					ray = Rayo(hit, rayDirection);
 
 				}
 
-				// Si el color es valido, se suma a la suma total del pixel
-				if (isnan(colorRayo[0]) || isnan(colorRayo[1]) || isnan(colorRayo[2])) {
-					k--;
-				}
-				else {
-					colorPixel += colorRayo;
-				}
+				// If valid, add the ray color to the pixel color.
+				if (isnan(rayColor[0]) || isnan(rayColor[1]) || isnan(rayColor[2]))
+						k--;
+				else
+						pxColor += rayColor;
 			}
 
-			// Guardamos el color del pixel en el vector de valores de pixeles
-			valoresPixeles[j * camara.altura + i] = colorPixel;
-        }
+			// Store the pixel color.
+			valoresPixeles[i*camara.base + j] = pxColor;
+	}
+
+}
+
+
+
+void capturarTrabajador(Camara& camara, list<Primitiva*> primitivas,
+	vector<Luz> luces, int rpp, SpaceSectioner& tiles,
+	vector<RGB>& valoresPixeles){
+
+	int minX, maxX, minY, maxY;
+	// While there are sections left to capture, get one and capture it.
+	while (tiles.getSection(minX, maxX, minY, maxY)) {
+		capturarSeccion(camara, primitivas, luces, rpp,	minX, maxX, minY, maxY,
+		valoresPixeles);
 	}
 }
 
-void captureSlave (Camara& camara, list<Primitiva*> primitivas, vector<Luz> luces,
-    int rpp, GestorDeSecciones& secciones, vector<RGB>& valoresPixeles){
-    int minX, maxX, minY, maxY;
-    // While there are sections left to capture, get one and capture it.
-    while (secciones.getSection(minX, maxX, minY, maxY)){
-        captureSection(camara, primitivas, luces, rpp, minX, maxX, minY, maxY,
-			valoresPixeles);
-	}
-}
 
-void escribirImagen(ofstream& salida, int b, int a, vector<RGB>& pixeles, float max, int rpp) {
-	// Escribir la cabecera de la imagen
-	salida << "P3" << endl;
-	salida << b << " " << a << endl;
 
-	// Escribir el valor maximo de los pixeles
-	salida << max * 255 / rpp << endl;
+void pathTracing(Camara& camara, list<Primitiva*> primitivas,
+	vector<Luz> luces, int rpp, int threads, string fileName){
 
-	// Escribir los pixeles en la imagen
-	for (int i = 0; i < a; i++) {
-		for (int j = 0; j < b; j++) {
-			RGB color = pixeles[j * a + i];
-			salida << color * 255 / rpp << "    ";
-		}
-		salida << endl;
-	}
-	salida.close();
-}
-
-void pathTracing(Camara& camara, list<Primitiva*> primitivas, vector<Luz> luces,
-    int rpp, int hilos, string fichero){
-    
-	// Apertura del fichero donde escribir la imagen
-	ofstream salida(fichero);
-	if (!salida.is_open()) {
-		// Si no se puede abrir el fichero
-		cerr << "Error en la apertura del fichero \"" << fichero << "\"" << endl;
+		// Open the file to write the image.
+	ofstream output(fileName);
+	if (!output.is_open()) {
+		cerr << "Error opening output file \"" << fileName << "\"" << endl;
 		exit(1);
 	}
 
-	int base = camara.base;
-	int altura = camara.altura;
+	// Write the header of the PPM file.
+	output << "P3" << endl;
+	output << camara.base << " " << camara.altura << endl;
 	
-	// Estructura para almacenar los pixeles de la imagen
-	vector<RGB> pixeles(altura * base);
+	// Structure to store the final image.
+	vector<RGB> finalImage(camara.altura * camara.base);
 
 	// Divide the image into sections.
-	GestorDeSecciones secciones(base, altura, hilos);
+	SpaceSectioner tiles(camara.base, camara.altura, threads, threads);
 
-	// Divide the work between the hilos. Each one will be capturing a section
+	// Divide the work between the threads. Each one will be capturing a section
 	// of the image while there are sections left.
-	vector<thread> threadsArray(hilos);
-	for (int t = 0; t < hilos; t++) {
-		threadsArray[t] = thread(&captureSlave, ref(camara), ref(primitivas),
-				ref(luces), rpp, ref(secciones), ref(pixeles));
+	vector<thread> threadsArray(threads);
+	for (int t = 0; t < threads; t++) {
+		int minH = t * camara.altura / threads;
+		int maxH = (t + 1) * camara.altura / threads;
+		threadsArray[t] = thread(&capturarTrabajador, ref(camara), ref(primitivas),
+				ref(luces), rpp, ref(tiles), ref(finalImage));
 	}
 
-	// Wait for all hilos to finish.
-	for (int t = 0; t < hilos; t++) {
-		threadsArray[t].join();
-	}
+	// Wait for all threads to finish.
+	for (int t = 0; t < threads; t++) threadsArray[t].join();
 
-	// Encontrar el valor maximo de los pixeles
+	// Find the maximum value of the pixels.
 	float max = 0;
-	for (int i = 0; i < altura; i++) {
-		for (int j = 0; j < base; j++) {
-			RGB pxColor = pixeles[i*base + j];
-			if (pxColor[0] > max) { max = pxColor[0]; }
-			if (pxColor[1] > max) { max = pxColor[1]; }
-			if (pxColor[2] > max) { max = pxColor[2]; }
+	for (int i = 0; i < camara.altura; i++) {
+		for (int j = 0; j < camara.base; j++) {
+			RGB pxColor = finalImage[i*camara.altura + j];
+			if (pxColor[0] > max) max = pxColor[0];
+			if (pxColor[1] > max) max = pxColor[1];
+			if (pxColor[2] > max) max = pxColor[2];
 		}
 	}
+	output << max * 255 / rpp << endl;
 
-	double valorMax = max * 255 / rpp;
-
-	ImagenPPM imagen(base, altura, valorMax);
-
-	// Establecer los colores en la imagen
-	vector<RGB> coloresImagen(base * altura);
-
-	for (int i = 0; i < altura; i++) {
-		for (int j = 0; j < base; j++) {
-			RGB color = pixeles[j * altura + i];
-			coloresImagen.push_back(color * 255 / rpp);
+	// Write the final image into the file.
+	for (int i = 0; i < camara.altura; i++) {
+		for (int j = 0; j < camara.base; j++) {
+			RGB pxColor = finalImage[i*camara.base + j];
+			output << pxColor*255/rpp << "    ";
 		}
+		output << endl;
 	}
-
-	imagen.establecerPixeles(coloresImagen);
-
-	imagen.escribirImagen(fichero);
-	
-	//escribirImagen(salida, base, altura, pixeles, max, rpp);
+	output.close();
 
 }
-
-
-
-
-
 
