@@ -1,5 +1,6 @@
 #include "pathTracing.hpp"
 
+const int N_REBOTES = 10;
 
 RGB colorInterseccion(const Primitiva* primitiva, list<Primitiva*> primitivas,
 	const Punto& pInterseccion, Luz& luz, const Camara& camara,
@@ -33,12 +34,10 @@ RGB colorInterseccion(const Primitiva* primitiva, list<Primitiva*> primitivas,
 
 }
 
-
-
 void renderizarSeccion(Camara& camara, list<Primitiva*> primitivas,
 	vector<Luz> luces, int rpp, int minX, int maxX,	int minY, int maxY,
 	vector<RGB>& valoresPixeles){
-
+/*
 	Vector modL = camara.l.normalizar();					// L and U normalized vectors.
 	Vector modU = camara.u.normalizar();
 	Vector sightOrigin = camara.f + camara.l + camara.u;	// Point located at the top left corner of the image.
@@ -51,7 +50,7 @@ void renderizarSeccion(Camara& camara, list<Primitiva*> primitivas,
 	Primitiva* primitiva;								// Closest figure to the camara.
 	RGB scatter;										// Color of the light scattered by the figure.
 	Efecto ph;										// Phenomenom of a interaction.
-	
+
 	// For each pixel in the section.
 	for (int i = minX; i < maxX; i++)
 		for (int j = minY; j < maxY; j++) {
@@ -130,6 +129,118 @@ void renderizarSeccion(Camara& camara, list<Primitiva*> primitivas,
 						k--;
 				else
 						colorPixel += rayColor;
+			}
+
+			// Store the pixel color.
+			valoresPixeles[i*camara.base + j] = colorPixel;
+	}
+*/
+	
+	Direccion modL = camara.l.normalizar();				// Vector L de camara normalizado
+	Direccion modU = camara.u.normalizar();				// Vector U de camara normalizado
+	Punto pIzqArriba = camara.f + camara.l + camara.u;	// Punto arriba a la izquierda de la imagen
+	GeneradorAleatorios rand(0, 1);						// Generador numero aleatorio
+	RGB colorPixel;										// Color del pixel
+	RGB colorRayo;										// Color del rayo
+	Rayo rayoCamara;									// Rayo actual desde la camara
+	Direccion direccionRayo;							// Direccion del rayo actual
+	float t, minT;										// Distancia a la primitiva mas cercana
+	Punto pInter;										// Punto de interseccion del rayo con primitiva
+	Primitiva* primitiva;								// Primitiva intersectada
+	RGB colorEmitido;									// Color emitido por la primitiva
+	Efecto efecto;											// Efecto de interaccion
+
+
+	// Recorrer todos los pixeles de la seccion
+	for (int i = minX; i < maxX; i++)
+		for (int j = minY; j < maxY; j++) {
+
+			// Establecer color inicial del pixel a negro
+			colorPixel = RGB();
+
+			// Para cada rayo lanzado a este pixel, ie, N_RPP
+			for (int k = 0; k < rpp; k++) {
+
+				// Estavlecer color del rayo a negro
+				colorRayo = RGB();
+
+				// Establecer color de emision a blanco
+				colorEmitido = RGB(1);
+
+				// antialising -> vector randomizado
+				direccionRayo = Direccion(pIzqArriba
+					- (j + rand.get()) * camara.basePixel * modL
+					- (i + rand.get()) * camara.alturaPixel * modU);
+				
+				// Crear el rayo desde la camara
+				rayoCamara = Rayo(camara.o, direccionRayo);
+
+				// Mientras el rayo de a una primitiva y no sea absorbido
+				bool terminar = false;
+				int nRebotes = 0;
+				//while (!terminar || nRebotes < N_REBOTES) {
+				while (nRebotes < N_REBOTES) {
+
+					// Obtener la figura y el punto de interseccion
+					minT = 1e6;
+					primitiva = nullptr;
+					for (Primitiva* p : primitivas){
+						if (p->intersecta(rayoCamara, t) && t < minT) {
+							// Si intersecta y tiene menor distancia guardamos el dato
+							minT = t;
+							primitiva = p;
+						}
+					}
+
+					if (primitiva == nullptr) {
+						// Si no ha intersectado con ninguna primitiva
+						break;
+					} 
+
+					pInter = rayoCamara.obtenerOrigen() + minT*rayoCamara.obtenerDireccion();
+
+					// Obtener el efecto provocado por la primitiva
+					BRDF brdf = BRDF(primitiva->obtenerMaterial(), primitiva->obtenerNormal(pInter));
+					efecto = brdf.obtenerEfecto();
+
+					switch(efecto) {
+						case ABSORCION:
+							terminar = true;
+							break;
+						case LUZ:
+							colorRayo += brdf.kl * colorEmitido;
+							terminar = true;
+							break;
+						case REFLEXION:
+							colorEmitido *= brdf.getFr(efecto, direccionRayo, pInter);
+							break;
+						case REFRACCION:
+							colorEmitido *= brdf.getFr(efecto, direccionRayo, pInter);
+							break;
+						default:
+							for (int i = 0; i < luces.size(); ++i){
+								colorRayo += colorInterseccion(primitiva, primitivas,
+									pInter, luces[i], camara,
+									colorEmitido, efecto, direccionRayo);
+							}
+							colorEmitido *= M_PI * brdf.getFr(efecto, direccionRayo, pInter);
+							break;
+					}
+					
+					// Update the ray.
+					pInter = pInter + 1e-4 * direccionRayo;
+					rayoCamara = Rayo(pInter, direccionRayo);
+
+					nRebotes++;
+				}
+
+				// If valid, add the ray color to the pixel color.
+				if (isnan(colorRayo[0]) || isnan(colorRayo[1]) || isnan(colorRayo[2])){
+					k--;
+				}
+				else{
+					colorPixel += colorRayo;
+				}
 			}
 
 			// Store the pixel color.

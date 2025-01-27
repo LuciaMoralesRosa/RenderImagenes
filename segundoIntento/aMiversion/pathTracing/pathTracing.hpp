@@ -58,15 +58,6 @@ void renderizarSeccion(Camara& camara, list<Primitiva*> primitivas,
 	vector<Luz> luces, int rpp, int minX, int maxX,	int minY, int maxY,
 	vector<RGB>& valoresPixeles);
 
-
-/**
- * @brief Captura un trabajador
- */
-void mandarTrabajo(Camara& camara, list<Primitiva*> primitivas,
-	vector<Luz> luces, int rpp, DivisorSecciones& tiles,
-	vector<RGB>& valoresPixeles);
-
-
 /**
  * @brief Path tracing
  */

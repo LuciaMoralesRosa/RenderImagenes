@@ -8,7 +8,7 @@ using namespace std;
 class DivisorSecciones {
     private:
     mutex mutex;
-    int base, altura, nSecciones;
+    int base, altura, nSeccionesX, nSeccionesY;
     int ejeX, ejeY;
     int iteracion, totalSecciones;
 
@@ -23,8 +23,9 @@ class DivisorSecciones {
      * @param a Altura de la imagen
      * @param s Número de secciones en las que se dividirá la imagen
      */
-    DivisorSecciones(int b, int a, int s) : base(b), altura(a), nSecciones(s),
-        final(false), iteracion(0), totalSecciones(s*s), ejeX(0), ejeY(0) {
+    DivisorSecciones(int b, int a, int s) : base(b), altura(a), nSeccionesX(s),
+        nSeccionesY(s), final(false), iteracion(0), totalSecciones(s*s),
+        ejeX(0), ejeY(0) {
         cout << "Renderizado: 0%" << endl;
     }
 
@@ -38,17 +39,17 @@ class DivisorSecciones {
 		}
 
         // Establecer valores de los ejes de la seccion
-		minX = ejeX * base / nSecciones;
-		maxX = (ejeX + 1) * base / nSecciones;
-		minY = ejeY * altura / nSecciones;
-		maxY = (ejeY + 1) * altura / nSecciones;
+		minX = ejeX * base / nSeccionesX;
+		maxX = (ejeX + 1) * base / nSeccionesX;
+		minY = ejeY * altura / nSeccionesY;
+		maxY = (ejeY + 1) * altura / nSeccionesY;
 
         // Por pantalla
     	cout << "\033[" << 1 << "A";
 		cout << "Renderizado: " << (++iteracion*100/totalSecciones) << "%" << endl;
-		if (++ejeY == nSecciones) {
+		if (++ejeY == nSeccionesY) {
 			ejeY = 0;
-			if (++ejeX == nSecciones){
+			if (++ejeX == nSeccionesX){
                 final = true;
             }
 		}

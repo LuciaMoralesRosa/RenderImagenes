@@ -20,7 +20,8 @@ class Escena1 : public Escena {
         Material m2(RGB(0.0, 0.8, 0.0), RGB(0, 0, 0), RGB(0, 0, 0), RGB(0, 0, 0), 0);
         Material m3(RGB(0.8, 0.8, 0.8), RGB(0, 0, 0), RGB(0, 0, 0), RGB(0, 0, 0), 0);
         Material m4(RGB(0.8, 0.8, 0.8), RGB(0, 0, 0), RGB(0, 0, 0), RGB(0, 0, 0), 0);
-        Material m5(RGB(0, 0, 0), RGB(0, 0, 0), RGB(0, 0, 0), RGB(0.99, 0.99, 0.99), 0);
+//        Material m5(RGB(0, 0, 0), RGB(0, 0, 0), RGB(0, 0, 0), RGB(0.99, 0.99, 0.99), 0);
+        Material m5(RGB(1, 1, 1), RGB(0, 0, 0), RGB(0, 0, 0), RGB(0, 0, 0), 0);
 
         Material m6(RGB(0.11, 0.41, 0.375), RGB(0.4, 0.4, 0.4), RGB(0, 0, 0), RGB(0, 0, 0), 0);
         Material m7(RGB(0,0,0), RGB(0.4, 0.4, 0.4), RGB(0.4, 0.4, 0.4), RGB(0, 0, 0), 1.5);

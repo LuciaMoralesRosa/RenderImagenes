@@ -69,6 +69,10 @@
         "thread": "cpp",
         "charconv": "cpp",
         "chrono": "cpp",
-        "format": "cpp"
+        "format": "cpp",
+        "array": "cpp",
+        "forward_list": "cpp",
+        "map": "cpp",
+        "xtree": "cpp"
     }
 }
