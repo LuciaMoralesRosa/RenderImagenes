@@ -54,7 +54,7 @@ RGB colorInterseccion(const Primitiva* primitiva, list<Primitiva*> primitivas,
 /**
  * @brief Captura una seccion de la imagen
  */
-void capturarSeccion(Camara& camara, list<Primitiva*> primitivas,
+void renderizarSeccion(Camara& camara, list<Primitiva*> primitivas,
 	vector<Luz> luces, int rpp, int minX, int maxX,	int minY, int maxY,
 	vector<RGB>& valoresPixeles);
 
@@ -62,7 +62,7 @@ void capturarSeccion(Camara& camara, list<Primitiva*> primitivas,
 /**
  * @brief Captura un trabajador
  */
-void capturarTrabajador(Camara& camara, list<Primitiva*> primitivas,
+void mandarTrabajo(Camara& camara, list<Primitiva*> primitivas,
 	vector<Luz> luces, int rpp, DivisorSecciones& tiles,
 	vector<RGB>& valoresPixeles);
 
@@ -71,4 +71,4 @@ void capturarTrabajador(Camara& camara, list<Primitiva*> primitivas,
  * @brief Path tracing
  */
 void pathTracing(Camara& camara, list<Primitiva*> primitivas,
-	vector<Luz> luces, int rpp, int threads, string fileName);
+	vector<Luz> luces, int rpp, int hilos, string fileName);

@@ -35,7 +35,7 @@ RGB colorInterseccion(const Primitiva* primitiva, list<Primitiva*> primitivas,
 
 
 
-void capturarSeccion(Camara& camara, list<Primitiva*> primitivas,
+void renderizarSeccion(Camara& camara, list<Primitiva*> primitivas,
 	vector<Luz> luces, int rpp, int minX, int maxX,	int minY, int maxY,
 	vector<RGB>& valoresPixeles){
 
@@ -43,7 +43,7 @@ void capturarSeccion(Camara& camara, list<Primitiva*> primitivas,
 	Vector modU = camara.u.normalizar();
 	Vector sightOrigin = camara.f + camara.l + camara.u;	// Point located at the top left corner of the image.
 	GeneradorAleatorios rand(0, 1);							// Random number generator.
-	RGB pxColor, rayColor;							// Total color for one pixel / ray.
+	RGB colorPixel, rayColor;							// Total color for one pixel / ray.
 	Rayo ray;											// Current ray.
 	Direccion rayDirection;								// Direction of ray.
 	float t, minT;										// Distance to the closest figure.
@@ -56,7 +56,7 @@ void capturarSeccion(Camara& camara, list<Primitiva*> primitivas,
 	for (int i = minX; i < maxX; i++)
 		for (int j = minY; j < maxY; j++) {
 
-			pxColor = RGB();
+			colorPixel = RGB();
 
 			// For each ray que pasa por este pixel.
 			for (int k = 0; k < rpp; k++) {
@@ -129,89 +129,82 @@ void capturarSeccion(Camara& camara, list<Primitiva*> primitivas,
 				if (isnan(rayColor[0]) || isnan(rayColor[1]) || isnan(rayColor[2]))
 						k--;
 				else
-						pxColor += rayColor;
+						colorPixel += rayColor;
 			}
 
 			// Store the pixel color.
-			valoresPixeles[i*camara.base + j] = pxColor;
+			valoresPixeles[i*camara.base + j] = colorPixel;
 	}
 
 }
 
 
 
-void capturarTrabajador(Camara& camara, list<Primitiva*> primitivas,
+void mandarTrabajo(Camara& camara, list<Primitiva*> primitivas,
 	vector<Luz> luces, int rpp, DivisorSecciones& tiles,
 	vector<RGB>& valoresPixeles){
 
 	int minX, maxX, minY, maxY;
 	// While there are sections left to capture, get one and capture it.
 	while (tiles.obtenerSeccion(minX, maxX, minY, maxY)) {
-		capturarSeccion(camara, primitivas, luces, rpp,	minX, maxX, minY, maxY,
+		renderizarSeccion(camara, primitivas, luces, rpp, minX, maxX, minY, maxY,
 		valoresPixeles);
 	}
 }
 
-void escribirImagen(int base, int altura, float max, int rpp, vector<RGB> finalImage, string file) {
-	// Open the file to write the image.
-	ofstream output(file);
-	if (!output.is_open()) {
-		cerr << "Error opening output file \"" << file << "\"" << endl;
-		exit(1);
-	}
-
-	// Write the header of the PPM file.
-	output << "P3" << endl;
-	output << base << " " << altura << endl;
-
-	output << max * 255 / rpp << endl;
-
-	// Write the final image into the file.
-	for (int i = 0; i < altura; i++) {
-		for (int j = 0; j < base; j++) {
-			RGB pxColor = finalImage[i * base + j];
-			output << pxColor*255/rpp << "    ";
-		}
-		output << endl;
-	}
-	output.close();
-
-}
 
 void pathTracing(Camara& camara, list<Primitiva*> primitivas,
-	vector<Luz> luces, int rpp, int threads, string file){	
+	vector<Luz> luces, int rpp, int hilos, string file){	
+
+	// Valores de la camara
+	int altura = camara.altura;
+	int base = camara.base;
+	int baseAltura = base * altura;
 	
-	// Structure to store the final image.
-	vector<RGB> finalImage(camara.base * camara.altura);
+	// Vector con los pixeles calculados de la imagen
+	vector<RGB> pixelesImagen(baseAltura);
 
-	// Divide the image into sections.
-	DivisorSecciones secciones(camara.base, camara.altura, threads);
+	// Reparto del trabajo entre los hilos para que cada uno capture una seccion
+	DivisorSecciones secciones(base, altura, hilos);
 
-
-	// Divide the work between the threads. Each one will be capturing a section
-	// of the image while there are sections left.
-	vector<thread> threadsArray(threads);
-	for (int t = 0; t < threads; t++) {
-		threadsArray[t] = thread(&capturarTrabajador, ref(camara), ref(primitivas),
-				ref(luces), rpp, ref(secciones), ref(finalImage));
+	vector<thread> arrayHilos(hilos);
+	for (int t = 0; t < hilos; t++) {
+		arrayHilos[t] = thread(&mandarTrabajo, ref(camara), ref(primitivas),
+				ref(luces), rpp, ref(secciones), ref(pixelesImagen));
 	}
 
-	// Wait for all threads to finish.
-	for (int t = 0; t < threads; t++){
-		threadsArray[t].join();	
+	// Esperar a que los hilos terminen de trabajar y cerrarlos
+	for (int t = 0; t < hilos; t++){
+		arrayHilos[t].join();	
 	} 
 
-	// Find the maximum value of the pixels.
+	// Encontrar el valor maximo
 	float max = 0;
-	for (int i = 0; i < camara.altura; i++) {
-		for (int j = 0; j < camara.base; j++) {
-			RGB pxColor = finalImage[i*camara.altura + j];
-			if (pxColor[0] > max) max = pxColor[0];
-			if (pxColor[1] > max) max = pxColor[1];
-			if (pxColor[2] > max) max = pxColor[2];
+	for (int i = 0; i < altura; i++) {
+		for (int j = 0; j < base; j++) {
+			RGB colorPixel = pixelesImagen[i * altura + j];
+			if (colorPixel[0] > max) {
+				max = colorPixel[0];
+			}
+			if (colorPixel[1] > max) {
+				max = colorPixel[1];
+			}
+			if (colorPixel[2] > max) {
+				max = colorPixel[2];
+			}
 		}
 	}
 
-	escribirImagen(camara.base, camara.altura, max, rpp, finalImage, file);
+	// Obtener el maximo total dados los rayos por pixel y normalizar
+	float nuevoMax = max * 255 / rpp;
+
+	// Normalizar los valores de los pixeles
+	vector<RGB> pixeles(baseAltura);
+	for(int i = 0; i < baseAltura; i++)
+		pixeles[i] = pixelesImagen[i] * 255 / rpp;
+
+	// Creacion y escritura de la imagen
+	ImagenPPM img(base, altura, nuevoMax, pixeles);
+	img.escribirImagen(file);
 }
 

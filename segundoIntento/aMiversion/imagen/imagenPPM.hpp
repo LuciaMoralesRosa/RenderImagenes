@@ -23,35 +23,31 @@ class ImagenPPM {
     public:
     ImagenPPM() : formato(""), valorMax(0), comentario(""), base(0), altura(0),
         resolucion(0), arrayPixeles() {}
-    ImagenPPM(int base, int altura, float valorMax, string comentario = "") :
-        base(base), altura(altura), valorMax(valorMax), comentario(comentario),
-        resolucion(0), arrayPixeles() {}
 
-    void establecerPixeles(vector<RGB> pixeles) { arrayPixeles = pixeles; }
+    ImagenPPM(int base, int altura, float valorMax, vector<RGB> pixeles,
+        string comentario = "") : base(base), altura(altura), valorMax(valorMax),
+        comentario(comentario), resolucion(0) {arrayPixeles = pixeles;}
+
     void escribirImagen(string fichero) {
         // Apertura del fichero donde escribir la imagen
-        ofstream salida(fichero);
-        if (!salida.is_open()) {
-            // Si no se puede abrir el fichero
-            cerr << "Error en la apertura del fichero \"" << fichero << "\"" << endl;
+        ofstream output(fichero);
+        if (!output.is_open()) {
+            cerr << "Error abriendo el fichero de salida \"" << fichero << "\"" << endl;
             exit(1);
         }
 
-                // Escribir la cabecera de la imagen
-        salida << "P3" << endl;
-        salida << base << " " << altura << endl;
+        // Write the header of the PPM file.
+        output << "P3" << endl;
+        output << base << " " << altura << endl;
 
-        // Escribir el valor maximo de los pixeles
-        salida << valorMax << endl;
+        output << valorMax << endl;
 
-        // Escribir los pixeles en la imagen
         for (int i = 0; i < altura; i++) {
             for (int j = 0; j < base; j++) {
-                RGB color = arrayPixeles[j * altura + i];
-                salida << color << "    ";
+                output << arrayPixeles[i*base + j] << " ";
             }
-            salida << endl;
+            output << endl;
         }
-        salida.close();
+        output.close();
     }
 };

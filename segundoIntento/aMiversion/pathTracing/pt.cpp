@@ -2,10 +2,8 @@
 #include "../escenas/escena1.hpp"
 
 
-//const int N_HILOS = 16;
-const int N_HILOS = 50;
-
-const int N_RPP = 512;
+const int N_HILOS = 16;
+const int N_RPP = 10;
 
 
     //g++ pt.cpp -o3 -o main
