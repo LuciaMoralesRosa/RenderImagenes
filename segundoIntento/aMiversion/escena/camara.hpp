@@ -75,4 +75,5 @@ public:
 	Camara(const Punto& origen, const Direccion& left, const Direccion& up,
 			const Direccion& forward, int b, int a);
 
+
 };

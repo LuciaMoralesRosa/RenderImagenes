@@ -15,7 +15,7 @@
 #include "../escena/camara.hpp"
 #include "../escena/luz.hpp"
 #include "../primitivas/primitiva.hpp"
-#include "spaceSectioner.hpp"
+#include "divisorSecciones.hpp"
 #include "../materiales/brdf.hpp"
 
 
@@ -63,7 +63,7 @@ void capturarSeccion(Camara& camara, list<Primitiva*> primitivas,
  * @brief Captura un trabajador
  */
 void capturarTrabajador(Camara& camara, list<Primitiva*> primitivas,
-	vector<Luz> luces, int rpp, SpaceSectioner& tiles,
+	vector<Luz> luces, int rpp, DivisorSecciones& tiles,
 	vector<RGB>& valoresPixeles);
 
 

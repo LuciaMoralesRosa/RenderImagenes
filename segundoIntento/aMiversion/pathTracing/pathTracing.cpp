@@ -58,7 +58,7 @@ void capturarSeccion(Camara& camara, list<Primitiva*> primitivas,
 
 			pxColor = RGB();
 
-			// For each ray.
+			// For each ray que pasa por este pixel.
 			for (int k = 0; k < rpp; k++) {
 
 				// Ray color starts being 0.
@@ -141,51 +141,65 @@ void capturarSeccion(Camara& camara, list<Primitiva*> primitivas,
 
 
 void capturarTrabajador(Camara& camara, list<Primitiva*> primitivas,
-	vector<Luz> luces, int rpp, SpaceSectioner& tiles,
+	vector<Luz> luces, int rpp, DivisorSecciones& tiles,
 	vector<RGB>& valoresPixeles){
 
 	int minX, maxX, minY, maxY;
 	// While there are sections left to capture, get one and capture it.
-	while (tiles.getSection(minX, maxX, minY, maxY)) {
+	while (tiles.obtenerSeccion(minX, maxX, minY, maxY)) {
 		capturarSeccion(camara, primitivas, luces, rpp,	minX, maxX, minY, maxY,
 		valoresPixeles);
 	}
 }
 
-
-
-void pathTracing(Camara& camara, list<Primitiva*> primitivas,
-	vector<Luz> luces, int rpp, int threads, string fileName){
-
-		// Open the file to write the image.
-	ofstream output(fileName);
+void escribirImagen(int base, int altura, float max, int rpp, vector<RGB> finalImage, string file) {
+	// Open the file to write the image.
+	ofstream output(file);
 	if (!output.is_open()) {
-		cerr << "Error opening output file \"" << fileName << "\"" << endl;
+		cerr << "Error opening output file \"" << file << "\"" << endl;
 		exit(1);
 	}
 
 	// Write the header of the PPM file.
 	output << "P3" << endl;
-	output << camara.base << " " << camara.altura << endl;
+	output << base << " " << altura << endl;
+
+	output << max * 255 / rpp << endl;
+
+	// Write the final image into the file.
+	for (int i = 0; i < altura; i++) {
+		for (int j = 0; j < base; j++) {
+			RGB pxColor = finalImage[i * base + j];
+			output << pxColor*255/rpp << "    ";
+		}
+		output << endl;
+	}
+	output.close();
+
+}
+
+void pathTracing(Camara& camara, list<Primitiva*> primitivas,
+	vector<Luz> luces, int rpp, int threads, string file){	
 	
 	// Structure to store the final image.
-	vector<RGB> finalImage(camara.altura * camara.base);
+	vector<RGB> finalImage(camara.base * camara.altura);
 
 	// Divide the image into sections.
-	SpaceSectioner tiles(camara.base, camara.altura, threads, threads);
+	DivisorSecciones secciones(camara.base, camara.altura, threads);
+
 
 	// Divide the work between the threads. Each one will be capturing a section
 	// of the image while there are sections left.
 	vector<thread> threadsArray(threads);
 	for (int t = 0; t < threads; t++) {
-		int minH = t * camara.altura / threads;
-		int maxH = (t + 1) * camara.altura / threads;
 		threadsArray[t] = thread(&capturarTrabajador, ref(camara), ref(primitivas),
-				ref(luces), rpp, ref(tiles), ref(finalImage));
+				ref(luces), rpp, ref(secciones), ref(finalImage));
 	}
 
 	// Wait for all threads to finish.
-	for (int t = 0; t < threads; t++) threadsArray[t].join();
+	for (int t = 0; t < threads; t++){
+		threadsArray[t].join();	
+	} 
 
 	// Find the maximum value of the pixels.
 	float max = 0;
@@ -197,17 +211,7 @@ void pathTracing(Camara& camara, list<Primitiva*> primitivas,
 			if (pxColor[2] > max) max = pxColor[2];
 		}
 	}
-	output << max * 255 / rpp << endl;
 
-	// Write the final image into the file.
-	for (int i = 0; i < camara.altura; i++) {
-		for (int j = 0; j < camara.base; j++) {
-			RGB pxColor = finalImage[i*camara.base + j];
-			output << pxColor*255/rpp << "    ";
-		}
-		output << endl;
-	}
-	output.close();
-
+	escribirImagen(camara.base, camara.altura, max, rpp, finalImage, file);
 }
 
