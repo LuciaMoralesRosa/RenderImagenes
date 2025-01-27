@@ -139,20 +139,6 @@ void renderizarSeccion(Camara& camara, list<Primitiva*> primitivas,
 }
 
 
-
-void mandarTrabajo(Camara& camara, list<Primitiva*> primitivas,
-	vector<Luz> luces, int rpp, DivisorSecciones& tiles,
-	vector<RGB>& valoresPixeles){
-
-	int minX, maxX, minY, maxY;
-	// While there are sections left to capture, get one and capture it.
-	while (tiles.obtenerSeccion(minX, maxX, minY, maxY)) {
-		renderizarSeccion(camara, primitivas, luces, rpp, minX, maxX, minY, maxY,
-		valoresPixeles);
-	}
-}
-
-
 void pathTracing(Camara& camara, list<Primitiva*> primitivas,
 	vector<Luz> luces, int rpp, int hilos, string file){	
 
@@ -169,8 +155,14 @@ void pathTracing(Camara& camara, list<Primitiva*> primitivas,
 
 	vector<thread> arrayHilos(hilos);
 	for (int t = 0; t < hilos; t++) {
-		arrayHilos[t] = thread(&mandarTrabajo, ref(camara), ref(primitivas),
-				ref(luces), rpp, ref(secciones), ref(pixelesImagen));
+		arrayHilos[t] = thread([&camara, &primitivas, &luces, rpp, &secciones, &pixelesImagen](){
+			int minX, maxX, minY, maxY;
+			// While there are sections left to capture, get one and capture it.
+			while (secciones.obtenerSeccion(minX, maxX, minY, maxY)) {
+				renderizarSeccion(camara, primitivas, luces, rpp, minX, maxX, minY, maxY,
+				pixelesImagen);
+			}
+		});
 	}
 
 	// Esperar a que los hilos terminen de trabajar y cerrarlos
