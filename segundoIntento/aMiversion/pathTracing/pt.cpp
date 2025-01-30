@@ -3,7 +3,7 @@
 
 
 const int N_HILOS = 16;
-const int N_RPP = 1024;
+const int N_RPP = 10;
 
 
     //g++ pt.cpp -o3 -o main

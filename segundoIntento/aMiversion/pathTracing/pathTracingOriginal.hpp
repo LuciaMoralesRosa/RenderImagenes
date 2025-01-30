@@ -33,8 +33,6 @@
 #include "../escena/camara.hpp"
 #include "../imagen/imagenPPM.hpp"  
 
-#include "../misc/utilities.hpp"
-
 
 /**
  * @brief Calcula el color de la interseccion

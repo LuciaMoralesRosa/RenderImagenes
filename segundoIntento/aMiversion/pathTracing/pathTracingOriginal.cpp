@@ -1,28 +1,4 @@
-#include "pathTracing.hpp"
-
-/**
- * N rayos -> N secciones
- *      - nSeccionesX = n/2
- *      - nSeccionesY = n/2 || n/2 + 1
- * 
- * Asignar valores de la cuadricula a cada seccion
- * 
- *     base
- * -----'-----'-----
- * |    '     '    |
- * |    '     '    | altura
- * |    '     '    |
- * -----'-----'-----
- * 
- * for(int i = 0; i < nSeccionesX; i++){
- *      for(int j = 0; j < nSeccionesY; j++){
- *          seccion[i] = {esqSupIzq: i * base / nSeccionesX, j * altura / nSeccionesY
- *                        esqInfDcha: i * base / nSeccionesX + base / nSeccionesX, j * altura / nSeccionesY + altura / nSeccionesY}
- *      }
- * }
- * 
- */
-
+#include "pathTracingOriginal.hpp"
 
 const int N_REBOTES = 10;
 
@@ -61,6 +37,104 @@ RGB colorInterseccion(const Primitiva* primitiva, list<Primitiva*> primitivas,
 void renderizarSeccion(Camara& camara, list<Primitiva*> primitivas,
 	vector<Luz> luces, int rpp, int minX, int maxX,	int minY, int maxY,
 	vector<RGB>& valoresPixeles){
+/*
+	Vector modL = camara.l.normalizar();					// L and U normalized vectors.
+	Vector modU = camara.u.normalizar();
+	Vector sightOrigin = camara.f + camara.l + camara.u;	// Point located at the top left corner of the image.
+	GeneradorAleatorios rand(0, 1);							// Random number generator.
+	RGB colorPixel, rayColor;							// Total color for one pixel / ray.
+	Rayo ray;											// Current ray.
+	Direccion rayDirection;								// Direction of ray.
+	float t, minT;										// Distance to the closest figure.
+	Punto hit;											// Point on whith the ray hits.
+	Primitiva* primitiva;								// Closest figure to the camara.
+	RGB scatter;										// Color of the light scattered by the figure.
+	Efecto ph;										// Phenomenom of a interaction.
+
+	// For each pixel in the section.
+	for (int i = minX; i < maxX; i++)
+		for (int j = minY; j < maxY; j++) {
+
+			colorPixel = RGB();
+
+			// For each ray que pasa por este pixel.
+			for (int k = 0; k < rpp; k++) {
+
+				// Ray color starts being 0.
+				rayColor = RGB();
+
+				// At first, scatter doesn't affect the total color.
+				scatter = RGB(1);
+
+				// Get the direction of the ray.
+				rayDirection = Direccion(sightOrigin - (j+rand.get())*camara.basePixel*modL
+						- (i+rand.get())*camara.alturaPixel*modU);
+				// Build the ray using the camara's origin and the direction.
+				ray = Rayo(camara.o, rayDirection);
+
+				// While the ray hits a figure and it's not absorbed.
+				while (true) {
+
+					// Get the first figure that intersects the ray, and the
+					// point of the intersection.
+					minT = 1e6;
+					primitiva = nullptr;
+					for (Primitiva* p : primitivas)
+						if (p->intersecta(ray, t) && t < minT) {
+							minT = t;
+							primitiva = p;
+					}
+					if (primitiva == nullptr) break;
+					hit = ray.obtenerOrigen() + minT*ray.obtenerDireccion();
+
+					// Get the phenomenom of the interaction.
+					BRDF brdf = BRDF(primitiva->obtenerMaterial(), primitiva->obtenerNormal(hit));
+					ph = brdf.obtenerEfecto();
+
+					// ABSORPTION: finish.
+					if (ph == ABSORCION)
+							break;
+
+					// LIGHT: add the light color and finish.
+					else if (ph == LUZ) {
+						rayColor += brdf.kl * scatter;
+						break;
+					} 
+
+					// REFLECTION: update scatter and get new ray.
+					else if (ph == REFLEXION)
+							scatter *= brdf.getFr(ph, rayDirection, hit);
+
+					// REFRACTION: update scatter and get new ray.
+					else if (ph == REFRACCION)
+							scatter *= brdf.getFr(ph, rayDirection, hit);
+
+					// DIFFUSE: add contribution, update scatter and get new ray.
+					else {
+						for (int i = 0; i < luces.size(); ++i)
+								rayColor += colorInterseccion(primitiva, primitivas,
+												hit, luces[i], camara,
+												scatter, ph, rayDirection);
+						scatter *= M_PI * brdf.getFr(ph, rayDirection, hit);
+					}
+
+					// Update the ray.
+					hit = hit + 1e-4 * rayDirection;
+					ray = Rayo(hit, rayDirection);
+
+				}
+
+				// If valid, add the ray color to the pixel color.
+				if (isnan(rayColor[0]) || isnan(rayColor[1]) || isnan(rayColor[2]))
+						k--;
+				else
+						colorPixel += rayColor;
+			}
+
+			// Store the pixel color.
+			valoresPixeles[i*camara.base + j] = colorPixel;
+	}
+*/
 	
 	Direccion modL = camara.l.normalizar();				// Vector L de camara normalizado
 	Direccion modU = camara.u.normalizar();				// Vector U de camara normalizado
@@ -193,13 +267,11 @@ void pathTracing(Camara& camara, list<Primitiva*> primitivas,
 	vector<thread> arrayHilos(hilos);
 	for (int t = 0; t < hilos; t++) {
 		arrayHilos[t] = thread([&camara, &primitivas, &luces, rpp, &secciones, &pixelesImagen](){
-			RangoSeccion rs;
+			int minX, maxX, minY, maxY;
 			// While there are sections left to capture, get one and capture it.
-			while (secciones.obtenerSeccion(rs)) {
-				renderizarSeccion(camara, primitivas, luces, rpp, rs.supIzq.ejeX,
-                                  rs.infDcha.ejeX, rs.supIzq.ejeY, rs.infDcha.ejeY,
-				                  pixelesImagen);
-                                  //Minx maxx miny maxy
+			while (secciones.obtenerSeccion(minX, maxX, minY, maxY)) {
+				renderizarSeccion(camara, primitivas, luces, rpp, minX, maxX, minY, maxY,
+				pixelesImagen);
 			}
 		});
 	}
